@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.757
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dynali-netcore", "dynali-netcore\dynali-netcore.csproj", "{B34A6234-A0D6-40AD-A244-5929D0E9B36E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dynalicli", "dynalicli\dynalicli.csproj", "{2A1DCA9F-3CB1-44DB-A4DF-7334214491A3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B34A6234-A0D6-40AD-A244-5929D0E9B36E} = {B34A6234-A0D6-40AD-A244-5929D0E9B36E}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B34A6234-A0D6-40AD-A244-5929D0E9B36E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B34A6234-A0D6-40AD-A244-5929D0E9B36E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B34A6234-A0D6-40AD-A244-5929D0E9B36E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B34A6234-A0D6-40AD-A244-5929D0E9B36E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A1DCA9F-3CB1-44DB-A4DF-7334214491A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A1DCA9F-3CB1-44DB-A4DF-7334214491A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A1DCA9F-3CB1-44DB-A4DF-7334214491A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A1DCA9F-3CB1-44DB-A4DF-7334214491A3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1AC49181-819D-4E4E-A2E3-6481F25374AD}
+	EndGlobalSection
+EndGlobal
