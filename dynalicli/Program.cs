@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Dynali;
+﻿using Dynali;
+using System;
 namespace dynalicli
 {
     class Program
@@ -15,8 +14,8 @@ namespace dynalicli
             }
 
             DynaliClient client = new DynaliClient();
-                    
-            
+
+
             /*
              *
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Dynali
 {
@@ -27,8 +24,8 @@ namespace Dynali
     }
 
     public class StatusResponse : JsonResponse
-    {        
+    {
         [JsonProperty("data")]
         public StatusPayload StatusPayload { get; set; }
-    }    
+    }
 }

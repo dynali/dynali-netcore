@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Dynali
 {
-    public class JsonResponse    
+    public class JsonResponse
     {
         [JsonProperty("status")]
         public string Status { get; set; }

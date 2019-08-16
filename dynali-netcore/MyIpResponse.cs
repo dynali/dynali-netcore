@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Dynali
 {
@@ -12,8 +9,8 @@ namespace Dynali
     }
 
     public class MyIpResponse : JsonResponse
-    {        
+    {
         [JsonProperty("data")]
         public MyIpPayload Data { get; set; }
-    }    
+    }
 }
