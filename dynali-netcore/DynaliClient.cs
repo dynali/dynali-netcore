@@ -13,8 +13,8 @@ namespace Dynali
 {
     public class DynaliClient
     {
-        static string EndpointLive = "https://api.dynali.net/nice/";
-        static string EndpointDebug = "https://debug.dynali.net/nice/";
+        const string EndpointLive = "https://api.dynali.net/nice/";
+        const string EndpointDebug = "https://debug.dynali.net/nice/";
 
         static protected string GetMd5Hash(MD5 md5Hash, string input)
         {
