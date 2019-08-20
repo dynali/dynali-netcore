@@ -1,4 +1,5 @@
 ﻿using System;
+using Dynali.Response;
 
 namespace Dynali.Entity
 {
@@ -83,6 +84,18 @@ namespace Dynali.Entity
             this.CreationDate = creationDate;
             this.LastUpdateDate = lastUpdateDate;
             this.StatusCheckDate = statusCheckDate;
+        }
+
+        public DynaliStatus(string hostname, StatusResponse statusResponse)
+        {
+            this.Hostname = hostname;
+            this.Ip = statusResponse.StatusPayload.Ip;
+            this.Status = statusResponse.StatusPayload.Status;
+            this.StatusMessage = statusResponse.StatusPayload.StatusMessage;
+            this.ExpiryDate = DateTime.Parse(statusResponse.StatusPayload.ExpiryDate);
+            this.CreationDate = DateTime.Parse(statusResponse.StatusPayload.Created);
+            this.LastUpdateDate = DateTime.Parse(statusResponse.StatusPayload.LastUpdate);
+            this.StatusCheckDate = DateTime.Now;
         }
 
         public override string ToString()

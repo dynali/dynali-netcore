@@ -139,7 +139,7 @@ namespace Dynali
             StatusResponse response = ExecuteAction<StatusResponse>(new StatusAction() { Hostname = hostname, Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
             if (response.IsSuccessful)
             {
-                return new DynaliStatus(hostname, response.StatusPayload.Ip, response.StatusPayload.Status, response.StatusPayload.StatusMessage, DateTime.Parse(response.StatusPayload.ExpiryDate), DateTime.Parse(response.StatusPayload.Created), DateTime.Parse(response.StatusPayload.LastUpdate), DateTime.Now);
+                return new DynaliStatus(hostname, response);
             }
             throw new DynaliException(response.Code, response.Message);            
         }
@@ -156,7 +156,7 @@ namespace Dynali
             StatusResponse response = await ExecuteActionAsync<StatusResponse>(new StatusAction() { Hostname = hostname, Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
             if (response.IsSuccessful)
             {
-                return new DynaliStatus(hostname, response.StatusPayload.Ip, response.StatusPayload.Status, response.StatusPayload.StatusMessage, DateTime.Parse(response.StatusPayload.ExpiryDate), DateTime.Parse(response.StatusPayload.Created), DateTime.Parse(response.StatusPayload.LastUpdate), DateTime.Now);
+                return new DynaliStatus(hostname, response);
             }
             throw new DynaliException(response.Code, response.Message);
         }
