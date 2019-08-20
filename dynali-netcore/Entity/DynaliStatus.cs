@@ -6,7 +6,7 @@ namespace Dynali.Entity
     /// <summary>
     /// Entity which represents information about Dynali hostname's status.
     /// </summary>
-    public class DynaliStatus
+    public class DynaliStatus : ICloneable
     {
         /// <summary>
         /// Numerical representation of the status as returned by Dynali.
@@ -108,6 +108,12 @@ namespace Dynali.Entity
                 + "Creation date: " + CreationDate.ToLongDateString() + "\r\n"
                 + "Last update: " + LastUpdateDate.ToLongDateString() + "\r\n"
                 + "Status check date: " + StatusCheckDate.ToLongDateString() + "\r\n";
+        }
+
+        public object Clone()
+        {
+            DynaliStatus cloned = (DynaliStatus) this.MemberwiseClone();
+            return cloned;
         }
     }
 }
