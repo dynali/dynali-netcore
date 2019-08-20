@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dynali
+namespace Dynali.Entity
 {
     /// <summary>
     /// Entity which represents information about Dynali hostname's status.

@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Dynali.Action;
+using Dynali.Entity;
+using Dynali.Response;
 
 namespace Dynali
 {
@@ -14,80 +14,117 @@ namespace Dynali
     {
         const string EndpointLive = "https://api.dynali.net/nice/";
         const string EndpointDebug = "https://debug.dynali.net/nice/";
-
-        static protected string GetMd5Hash(string input)
+        public enum DynaliEnvironmentTarget { DEBUG = 0, LIVE = 1 };
+        public DynaliEnvironmentTarget DynaliEnvironment { get; set; } = DynaliEnvironmentTarget.LIVE;
+        
+        /// <summary>
+        /// Prepares WebRequest object.
+        /// </summary>
+        /// <param name="dynaliEnvironment">Sele</param>
+        /// <returns>WebRequest</returns>
+        protected WebRequest PrepareWebRequest()
         {
-            MD5 md5Hash = MD5.Create();
-
-            // Convert the input string to a byte array and compute the hash.
-            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
-
-            // Create a new Stringbuilder to collect the bytes
-            // and create a string.
-            StringBuilder sBuilder = new StringBuilder();
-
-            // Loop through each byte of the hashed data 
-            // and format each one as a hexadecimal string.
-            for (int i = 0; i < data.Length; i++)
-            {
-                sBuilder.Append(data[i].ToString("x2"));
-            }
-
-            // Return the hexadecimal string.
-            return sBuilder.ToString();
-        }
-
-        static protected string Execute(Dictionary<string, dynamic> postdata, Boolean useDevEnv = false)
-        {
-            //prepare the request
-            WebRequest request = WebRequest.CreateHttp(useDevEnv ? DynaliClient.EndpointDebug : DynaliClient.EndpointLive);
+            WebRequest request = WebRequest.CreateHttp(DynaliEnvironment == DynaliEnvironmentTarget.DEBUG ? DynaliClient.EndpointDebug : DynaliClient.EndpointLive);
             request.Headers.Add(HttpRequestHeader.ContentType, "application/json");
             request.Method = "POST";
-            byte[] contentsBytes = UTF8Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(postdata));
+            return request;
+        }
+        
+        /// <summary>
+        /// Validates action's parameters.
+        /// Throws exception of failure, does nothing on success.
+        /// </summary>
+        /// <param name="action">IDynaliAction, request's action</param>
+        protected void ValidateAction(IDynaliAction action)
+        {
+            List<string> validationErrors = action.GetValidationErrors();
+            if (validationErrors.Count > 0)
+            {
+                throw new ArgumentException("Invalid request parameters: " + string.Join(", ", validationErrors));
+            }
+        }
+
+        /// <summary>
+        /// Reads response from Stream into a string.
+        /// </summary>
+        /// <param name="responseStream">Stream, input stream</param>
+        /// <returns>string, response</returns>
+        protected string ReadResponse(Stream responseStream)
+        {
+            StreamReader reader = new StreamReader(responseStream);
+            string responseString = reader.ReadToEnd();
+            reader.Close();
+            return responseString;
+        }
+
+        /// <summary>
+        /// Calls the Dynali's webservice, sends action's parameters as json.
+        /// </summary>
+        /// <param name="action">IDynaliAction, request's action</param>
+        /// <returns>string, JSON response</returns>
+        protected string Call(IDynaliAction action)
+        {
+            ValidateAction(action);
+            byte[] contentsBytes = UTF8Encoding.UTF8.GetBytes(action.ToJson());
+            WebRequest request = PrepareWebRequest();
             request.GetRequestStream().Write(contentsBytes, 0, contentsBytes.Length);
 
-            //get the response
-            StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream());
-            string responseString = reader.ReadToEnd();
-            reader.Close();
-
-            //return it
-            return responseString;
+            Stream responseStream = request.GetResponse().GetResponseStream();
+            return ReadResponse(responseStream);
         }
 
-        async static protected Task<string> ExecuteAsync(Dictionary<string, dynamic> postdata, Boolean useDevEnv = false)
+        /// <summary>
+        /// Calls the Dynali's webservice asynchronously, sends action's parameters as json.
+        /// </summary>
+        /// <param name="action">IDynaliAction, request's action</param>
+        /// <returns>string, JSON response</returns>
+        async protected Task<string> CallAsync(IDynaliAction action)
         {
-            //prepare the request
-            WebRequest request = WebRequest.CreateHttp(useDevEnv ? DynaliClient.EndpointDebug : DynaliClient.EndpointLive);
-            request.Headers.Add(HttpRequestHeader.ContentType, "application/json");
-            request.Method = "POST";
-            byte[] contentsBytes = UTF8Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(postdata));
+            ValidateAction(action);
+            byte[] contentsBytes = UTF8Encoding.UTF8.GetBytes(action.ToJson());
+            WebRequest request = PrepareWebRequest();            
             (await request.GetRequestStreamAsync()).Write(contentsBytes, 0, contentsBytes.Length);
 
-            //get the response
-            StreamReader reader = new StreamReader((await request.GetResponseAsync()).GetResponseStream());
-            string responseString = reader.ReadToEnd();
-            reader.Close();
-
-            //return it
-            return responseString;
+            Stream responseStream = (await request.GetResponseAsync()).GetResponseStream();
+            return ReadResponse(responseStream);
+        }
+           
+        /// <summary>
+        /// Returns client's IP as detected by Dynali.
+        /// </summary>
+        /// <returns>string, IP Address</returns>        
+        public string RetrieveMyIp()
+        {
+            MyIpResponse response = ExecuteAction<MyIpResponse>(new MyIpAction());        
+            if(response.IsSuccessful)
+            {
+                return response.Data.Ip;
+            }
+            throw new DynaliException(response.Code, response.Message);
         }
 
         /// <summary>
         /// Returns client's IP as detected by Dynali.
         /// </summary>
         /// <returns>string, IP Address</returns>        
-        static public string MyIp()
+        async public Task<string> RetrieveMyIpAsync()
         {
-            Dictionary<string, dynamic> body = new Dictionary<string, dynamic>() { ["action"] = "myip" };
-            MyIpResponse response = JsonConvert.DeserializeObject<MyIpResponse>(Execute(body));
-
-            if (response.Code == 200)
+            MyIpResponse response = JsonResponse.Parse<MyIpResponse>(await CallAsync(new MyIpAction()));
+            if (response.IsSuccessful)
             {
                 return response.Data.Ip;
             }
-
             throw new DynaliException(response.Code, response.Message);
+        }
+
+        protected T ExecuteAction<T>(IDynaliAction action)
+        {
+            return JsonResponse.Parse<T>(Call(action));
+        }
+
+        async protected Task<T> ExecuteActionAsync<T>(IDynaliAction action)
+        {
+            return JsonResponse.Parse<T>(await CallAsync(action));
         }
 
         /// <summary>
@@ -97,41 +134,30 @@ namespace Dynali
         /// <param name="username">username</param>
         /// <param name="password">password</param>
         /// <returns>DynaliStatus; entity which represents hostname's status.</returns>
-        static public DynaliStatus Status(string hostname, string username, string password, Boolean useDevEnv = false)
+        public DynaliStatus RetrieveStatus(string hostname, string username, string password)
         {
-            if (hostname.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing hostname.");
-            }
-
-            if (username.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing username.");
-            }
-
-            if (password.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing password.");
-            }
-
-            Dictionary<string, dynamic> body = new Dictionary<string, dynamic>()
-            {
-                ["action"] = "status",
-                ["payload"] =
-                {
-                    ["hostname"] = hostname.ToLower(),
-                    ["username"] = username,
-                    ["password"] = GetMd5Hash(password).ToLower()
-                }
-            };
-
-            StatusResponse response = JsonConvert.DeserializeObject<StatusResponse>(Execute(body, useDevEnv));
-
-            if (response.Code == 200)
+            StatusResponse response = ExecuteAction<StatusResponse>(new StatusAction() { Hostname = hostname, Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
+            if (response.IsSuccessful)
             {
                 return new DynaliStatus(hostname, response.StatusPayload.Ip, response.StatusPayload.Status, response.StatusPayload.StatusMessage, DateTime.Parse(response.StatusPayload.ExpiryDate), DateTime.Parse(response.StatusPayload.Created), DateTime.Parse(response.StatusPayload.LastUpdate), DateTime.Now);
             }
+            throw new DynaliException(response.Code, response.Message);            
+        }
 
+        /// <summary>
+        /// Receives hostname's status.
+        /// </summary>
+        /// <param name="hostname">hostname</param>
+        /// <param name="username">username</param>
+        /// <param name="password">password</param>
+        /// <returns>DynaliStatus; entity which represents hostname's status.</returns>
+        async public Task<DynaliStatus> RetrieveStatusAsync(string hostname, string username, string password)
+        {
+            StatusResponse response = await ExecuteActionAsync<StatusResponse>(new StatusAction() { Hostname = hostname, Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
+            if (response.IsSuccessful)
+            {
+                return new DynaliStatus(hostname, response.StatusPayload.Ip, response.StatusPayload.Status, response.StatusPayload.StatusMessage, DateTime.Parse(response.StatusPayload.ExpiryDate), DateTime.Parse(response.StatusPayload.Created), DateTime.Parse(response.StatusPayload.LastUpdate), DateTime.Now);
+            }
             throw new DynaliException(response.Code, response.Message);
         }
 
@@ -143,83 +169,21 @@ namespace Dynali
         /// <param name="password">Password assigned to hostname</param>
         /// <param name="newPassword">New password for hostname</param>
         /// <returns>boolean, true on success; throws Exception of failure</returns>
-        static public bool ChangePassword(string hostname, string username, string password, string newPassword, Boolean useDevEnv = false)
+        public bool ChangePassword(string hostname, string username, string password, string newPassword)
         {
-            if (hostname.Length == 0)
+            JsonResponse response = ExecuteAction<JsonResponse>(new ChangePasswordAction() { Hostname = hostname, NewPassword = HostnameAction.GetMd5Hash(newPassword).ToLower(), Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
+            if (response.IsSuccessful)
             {
-                throw new ArgumentException("Invalid or missing hostname.");
+                return true; 
             }
 
-            if (username.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing username.");
-            }
-
-            if (password.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing password.");
-            }
-
-            if (newPassword.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing new password.");
-            }
-
-            Dictionary<string, dynamic> body = new Dictionary<string, dynamic>()
-            {
-                ["action"] = "changepassword",
-                ["payload"] = {
-                    ["username"] = username,
-                    ["password"] = GetMd5Hash(password).ToLower(),
-                    ["hostname"] = hostname.ToLower(),
-                    ["newpassword"] = GetMd5Hash(newPassword).ToLower()
-                }
-            };
-
-            JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(Execute(body, useDevEnv));
-            if (response.Code == 200)
-            {
-                return true;
-            }
-
-            throw new DynaliException(response.Code, response.Message);
+            throw new DynaliException(response.Code, response.Message);            
         }
 
-        async static public Task<Boolean> ChangePasswordAsync(string hostname, string username, string password, string newPassword, Boolean useDevEnv = false)
+        async public Task<Boolean> ChangePasswordAsync(string hostname, string username, string password, string newPassword)
         {
-            if (hostname.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing hostname.");
-            }
-
-            if (username.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing username.");
-            }
-
-            if (password.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing password.");
-            }
-
-            if (newPassword.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing new password.");
-            }
-
-            Dictionary<string, dynamic> body = new Dictionary<string, dynamic>()
-            {
-                ["action"] = "changepassword",
-                ["payload"] = {
-                    ["username"] = username,
-                    ["password"] = GetMd5Hash(password).ToLower(),
-                    ["hostname"] = hostname.ToLower(),
-                    ["newpassword"] = GetMd5Hash(newPassword).ToLower()
-                }
-            };
-
-            JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(await ExecuteAsync(body, useDevEnv));
-            if (response.Code == 200)
+            JsonResponse response = await ExecuteActionAsync<JsonResponse>(new ChangePasswordAction() { Hostname = hostname, NewPassword = HostnameAction.GetMd5Hash(newPassword).ToLower(), Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
+            if (response.IsSuccessful)
             {
                 return true;
             }
@@ -235,41 +199,10 @@ namespace Dynali
         /// <param name="password">password</param>
         /// <param name="ip">Valid IPv4 Address. Use "auto" in order to automatically detect your ip.</param>
         /// <returns>true on success; boolean</returns>
-        static public bool Update(string hostname, string username, string password, string ip = "auto", Boolean useDevEnv = false)
+        public bool Update(string hostname, string username, string password, string ip = "auto")
         {
-            if (hostname.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing hostname.");
-            }
-
-            if (username.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing username.");
-            }
-
-            if (password.Length == 0)
-            {
-                throw new ArgumentException("Invalid or missing password.");
-            }
-
-            if (ip != "auto" && !ValidateIPv4(ip))
-            {
-                throw new ArgumentException("Invalid IP. Provided `" + ip + "`.");
-            }
-
-            Dictionary<string, dynamic> body = new Dictionary<string, dynamic>()
-            {
-                ["action"] = "update",
-                ["payload"] = {
-                    ["username"] = username,
-                    ["password"] = GetMd5Hash(password).ToLower(),
-                    ["hostname"] = hostname.ToLower(),
-                    ["myip"] = ip
-                }
-            };
-
-            JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(Execute(body, useDevEnv));
-            if (response.Code == 200)
+            JsonResponse response = ExecuteAction<JsonResponse>(new UpdateAction() { Hostname = hostname, Ip = ip, Password = HostnameAction.GetMd5Hash(password), Username = username });
+            if (response.IsSuccessful)
             {
                 return true;
             }
@@ -277,21 +210,23 @@ namespace Dynali
             throw new DynaliException(response.Code, response.Message);
         }
 
-        static protected bool ValidateIPv4(string ipString)
+        /// <summary>
+        /// Updates client's hostname with client's ip. Username and password are required. IP can be provided or automatically detected.
+        /// </summary>
+        /// <param name="hostname">hostname</param>
+        /// <param name="username">username</param>
+        /// <param name="password">password</param>
+        /// <param name="ip">Valid IPv4 Address. Use "auto" in order to automatically detect your ip.</param>
+        /// <returns>true on success; boolean</returns>
+        async public Task<bool> UpdateAsync(string hostname, string username, string password, string ip = "auto")
         {
-            if (String.IsNullOrWhiteSpace(ipString))
+            JsonResponse response = await ExecuteActionAsync<JsonResponse>(new UpdateAction() { Hostname = hostname, Ip = ip, Password = HostnameAction.GetMd5Hash(password), Username = username });
+            if (response.IsSuccessful)
             {
-                return false;
+                return true;
             }
 
-            string[] splitValues = ipString.Split('.');
-            if (splitValues.Length != 4)
-            {
-                return false;
-            }
-
-            byte tempForParsing;
-            return splitValues.All(r => byte.TryParse(r, out tempForParsing));
+            throw new DynaliException(response.Code, response.Message);
         }
 
     }

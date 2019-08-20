@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Dynali
+namespace Dynali.Response
 {
     public class StatusPayload
     {
@@ -27,5 +27,5 @@ namespace Dynali
     {
         [JsonProperty("data")]
         public StatusPayload StatusPayload { get; set; }
-    }
+    }    
 }

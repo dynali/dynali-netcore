@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Dynali
+namespace Dynali.Response
 {
     public class MyIpPayload
     {
