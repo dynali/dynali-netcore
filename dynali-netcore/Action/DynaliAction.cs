@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
 
 namespace Dynali.Action
 {
-    abstract public class DynaliAction : IDynaliAction
+    public abstract class DynaliAction : IDynaliAction
     {
         /// <summary>
         /// Storage for internal values. Replaces separate attributes for easier conversion in ToJson method.

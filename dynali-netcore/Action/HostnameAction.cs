@@ -1,19 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Security.Cryptography;
 
 namespace Dynali.Action
 {
-    abstract public class HostnameAction : DynaliAction, IDynaliAction
+    public abstract class HostnameAction : DynaliAction, IDynaliAction
     {
         public string Hostname
         {
-            get {
+            get
+            {
                 return payload.ContainsKey("hostname") ? payload["hostname"] : null;
             }
-            set {
+            set
+            {
                 payload["hostname"] = value;
             }
         }
@@ -42,7 +43,7 @@ namespace Dynali.Action
             }
         }
 
-        static public string GetMd5Hash(string input)
+        public static string GetMd5Hash(string input)
         {
             MD5 md5Hash = MD5.Create();
 
@@ -77,7 +78,7 @@ namespace Dynali.Action
             {
                 validationErrors.Add("Invalid or missing username.");
             }
-               
+
             if (!Regex.IsMatch(Password, "^[a-f0-9]{32}$", RegexOptions.IgnoreCase))
             {
                 validationErrors.Add("Invalid or missing password.");

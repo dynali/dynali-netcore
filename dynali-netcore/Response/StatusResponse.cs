@@ -27,5 +27,5 @@ namespace Dynali.Response
     {
         [JsonProperty("data")]
         public StatusPayload StatusPayload { get; set; }
-    }    
+    }
 }

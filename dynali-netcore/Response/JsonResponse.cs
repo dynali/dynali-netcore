@@ -4,7 +4,7 @@ namespace Dynali.Response
 {
     public class JsonResponse
     {
-        public bool IsSuccessful => (this.Code == 200);
+        public bool IsSuccessful => (Code == 200);
 
         [JsonProperty("status")]
         public string Status { get; set; }

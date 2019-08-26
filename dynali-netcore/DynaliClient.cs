@@ -1,22 +1,22 @@
-﻿using System;
+﻿using Dynali.Action;
+using Dynali.Entity;
+using Dynali.Response;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Dynali.Action;
-using Dynali.Entity;
-using Dynali.Response;
 
 namespace Dynali
 {
     public class DynaliClient
     {
-        const string EndpointLive = "https://api.dynali.net/nice/";
-        const string EndpointDebug = "https://debug.dynali.net/nice/";
+        private const string EndpointLive = "https://api.dynali.net/nice/";
+        private const string EndpointDebug = "https://debug.dynali.net/nice/";
         public enum DynaliEnvironmentTarget { DEBUG = 0, LIVE = 1 };
         public DynaliEnvironmentTarget DynaliEnvironment { get; set; } = DynaliEnvironmentTarget.LIVE;
-        
+
         /// <summary>
         /// Prepares WebRequest object.
         /// </summary>
@@ -29,7 +29,7 @@ namespace Dynali
             request.Method = "POST";
             return request;
         }
-        
+
         /// <summary>
         /// Validates action's parameters.
         /// Throws exception of failure, does nothing on success.
@@ -78,25 +78,25 @@ namespace Dynali
         /// </summary>
         /// <param name="action">IDynaliAction, request's action</param>
         /// <returns>string, JSON response</returns>
-        async protected Task<string> CallAsync(IDynaliAction action)
+        protected async Task<string> CallAsync(IDynaliAction action)
         {
             ValidateAction(action);
             byte[] contentsBytes = UTF8Encoding.UTF8.GetBytes(action.ToJson());
-            WebRequest request = PrepareWebRequest();            
+            WebRequest request = PrepareWebRequest();
             (await request.GetRequestStreamAsync()).Write(contentsBytes, 0, contentsBytes.Length);
 
             Stream responseStream = (await request.GetResponseAsync()).GetResponseStream();
             return ReadResponse(responseStream);
         }
-           
+
         /// <summary>
         /// Returns client's IP as detected by Dynali.
         /// </summary>
         /// <returns>string, IP Address</returns>        
         public string RetrieveMyIp()
         {
-            MyIpResponse response = ExecuteAction<MyIpResponse>(new MyIpAction());        
-            if(response.IsSuccessful)
+            MyIpResponse response = ExecuteAction<MyIpResponse>(new MyIpAction());
+            if (response.IsSuccessful)
             {
                 return response.Data.Ip;
             }
@@ -107,7 +107,7 @@ namespace Dynali
         /// Returns client's IP as detected by Dynali.
         /// </summary>
         /// <returns>string, IP Address</returns>        
-        async public Task<string> RetrieveMyIpAsync()
+        public async Task<string> RetrieveMyIpAsync()
         {
             MyIpResponse response = JsonResponse.Parse<MyIpResponse>(await CallAsync(new MyIpAction()));
             if (response.IsSuccessful)
@@ -117,12 +117,24 @@ namespace Dynali
             throw new DynaliException(response.Code, response.Message);
         }
 
-        protected T ExecuteAction<T>(IDynaliAction action)
+        /// <summary>
+        /// Executes provided DynaliAction.
+        /// </summary>
+        /// <typeparam name="T">JsonResponse deriative</typeparam>
+        /// <param name="action">Action details</param>
+        /// <returns>JsonResponse deriative</returns>
+        protected T ExecuteAction<T>(IDynaliAction action) where T : JsonResponse
         {
             return JsonResponse.Parse<T>(Call(action));
         }
 
-        async protected Task<T> ExecuteActionAsync<T>(IDynaliAction action)
+        /// <summary>
+        /// Executes provided DynaliAction.
+        /// </summary>
+        /// <typeparam name="T">JsonResponse deriative</typeparam>
+        /// <param name="action">Action details</param>
+        /// <returns>JsonResponse deriative</returns>
+        protected async Task<T> ExecuteActionAsync<T>(IDynaliAction action) where T : JsonResponse
         {
             return JsonResponse.Parse<T>(await CallAsync(action));
         }
@@ -141,7 +153,7 @@ namespace Dynali
             {
                 return new DynaliStatus(hostname, response);
             }
-            throw new DynaliException(response.Code, response.Message);            
+            throw new DynaliException(response.Code, response.Message);
         }
 
         /// <summary>
@@ -151,7 +163,7 @@ namespace Dynali
         /// <param name="username">username</param>
         /// <param name="password">password</param>
         /// <returns>DynaliStatus; entity which represents hostname's status.</returns>
-        async public Task<DynaliStatus> RetrieveStatusAsync(string hostname, string username, string password)
+        public async Task<DynaliStatus> RetrieveStatusAsync(string hostname, string username, string password)
         {
             StatusResponse response = await ExecuteActionAsync<StatusResponse>(new StatusAction() { Hostname = hostname, Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
             if (response.IsSuccessful)
@@ -174,13 +186,13 @@ namespace Dynali
             JsonResponse response = ExecuteAction<JsonResponse>(new ChangePasswordAction() { Hostname = hostname, NewPassword = HostnameAction.GetMd5Hash(newPassword).ToLower(), Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
             if (response.IsSuccessful)
             {
-                return true; 
+                return true;
             }
 
-            throw new DynaliException(response.Code, response.Message);            
+            throw new DynaliException(response.Code, response.Message);
         }
 
-        async public Task<Boolean> ChangePasswordAsync(string hostname, string username, string password, string newPassword)
+        public async Task<Boolean> ChangePasswordAsync(string hostname, string username, string password, string newPassword)
         {
             JsonResponse response = await ExecuteActionAsync<JsonResponse>(new ChangePasswordAction() { Hostname = hostname, NewPassword = HostnameAction.GetMd5Hash(newPassword).ToLower(), Password = HostnameAction.GetMd5Hash(password).ToLower(), Username = username });
             if (response.IsSuccessful)
@@ -218,7 +230,7 @@ namespace Dynali
         /// <param name="password">password</param>
         /// <param name="ip">Valid IPv4 Address. Use "auto" in order to automatically detect your ip.</param>
         /// <returns>true on success; boolean</returns>
-        async public Task<bool> UpdateAsync(string hostname, string username, string password, string ip = "auto")
+        public async Task<bool> UpdateAsync(string hostname, string username, string password, string ip = "auto")
         {
             JsonResponse response = await ExecuteActionAsync<JsonResponse>(new UpdateAction() { Hostname = hostname, Ip = ip, Password = HostnameAction.GetMd5Hash(password), Username = username });
             if (response.IsSuccessful)

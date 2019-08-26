@@ -1,5 +1,5 @@
-﻿using System;
-using Dynali.Response;
+﻿using Dynali.Response;
+using System;
 
 namespace Dynali.Entity
 {
@@ -51,17 +51,17 @@ namespace Dynali.Entity
         /// <summary>
         /// Informs if hostname is still active in Dynali.
         /// </summary>
-        public bool IsActive => (this.Status == 0);
+        public bool IsActive => (Status == 0);
 
         /// <summary>
         /// Informs if hostname is still active in Dynali.
         /// </summary>
-        public bool IsExpired => (this.Status == 2);
+        public bool IsExpired => (Status == 2);
 
         /// <summary>
         /// Informs if hostname is still active in Dynali.
         /// </summary>
-        public bool IsBanned => (this.Status == 9);
+        public bool IsBanned => (Status == 9);
 
         /// <summary>
         /// Creates new instance of the hostname's status entity.
@@ -76,26 +76,26 @@ namespace Dynali.Entity
         /// <param name="statusCheckDate">Status check date</param>
         public DynaliStatus(string hostname, string ip, int status, string statusMessage, DateTime expiryDate, DateTime creationDate, DateTime lastUpdateDate, DateTime statusCheckDate)
         {
-            this.Hostname = hostname;
-            this.Ip = ip;
-            this.Status = status;
-            this.StatusMessage = statusMessage;
-            this.ExpiryDate = expiryDate;
-            this.CreationDate = creationDate;
-            this.LastUpdateDate = lastUpdateDate;
-            this.StatusCheckDate = statusCheckDate;
+            Hostname = hostname;
+            Ip = ip;
+            Status = status;
+            StatusMessage = statusMessage;
+            ExpiryDate = expiryDate;
+            CreationDate = creationDate;
+            LastUpdateDate = lastUpdateDate;
+            StatusCheckDate = statusCheckDate;
         }
 
         public DynaliStatus(string hostname, StatusResponse statusResponse)
         {
-            this.Hostname = hostname;
-            this.Ip = statusResponse.StatusPayload.Ip;
-            this.Status = statusResponse.StatusPayload.Status;
-            this.StatusMessage = statusResponse.StatusPayload.StatusMessage;
-            this.ExpiryDate = DateTime.Parse(statusResponse.StatusPayload.ExpiryDate);
-            this.CreationDate = DateTime.Parse(statusResponse.StatusPayload.Created);
-            this.LastUpdateDate = DateTime.Parse(statusResponse.StatusPayload.LastUpdate);
-            this.StatusCheckDate = DateTime.Now;
+            Hostname = hostname;
+            Ip = statusResponse.StatusPayload.Ip;
+            Status = statusResponse.StatusPayload.Status;
+            StatusMessage = statusResponse.StatusPayload.StatusMessage;
+            ExpiryDate = DateTime.Parse(statusResponse.StatusPayload.ExpiryDate);
+            CreationDate = DateTime.Parse(statusResponse.StatusPayload.Created);
+            LastUpdateDate = DateTime.Parse(statusResponse.StatusPayload.LastUpdate);
+            StatusCheckDate = DateTime.Now;
         }
 
         public override string ToString()
@@ -112,7 +112,7 @@ namespace Dynali.Entity
 
         public object Clone()
         {
-            DynaliStatus cloned = (DynaliStatus) this.MemberwiseClone();
+            DynaliStatus cloned = (DynaliStatus)MemberwiseClone();
             return cloned;
         }
     }

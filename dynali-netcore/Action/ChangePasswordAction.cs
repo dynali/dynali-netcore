@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace Dynali.Action
 {
@@ -12,7 +9,7 @@ namespace Dynali.Action
         {
             get
             {
-                return "changepassowrd";
+                return "changepassword";
             }
         }
 

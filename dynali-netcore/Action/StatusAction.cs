@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
-
-namespace Dynali.Action
+﻿namespace Dynali.Action
 {
     public class StatusAction : HostnameAction
     {

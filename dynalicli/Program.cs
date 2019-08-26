@@ -1,19 +1,51 @@
 ﻿using Dynali;
 using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+
 namespace dynalicli
 {
     class Program
     {
+        struct Hostname
+        {
+            public string Username;
+            public string Password;
+        }
+        static Dictionary<string, Hostname> loadHostnames(string filepath)
+        {
+            Dictionary<string, Hostname> hostnames = new Dictionary<string, Hostname>();
+
+            if (!File.Exists(filepath))
+            {
+                throw new FileNotFoundException("File does not exist.", filepath);
+            }
+
+            StreamReader reader = new StreamReader(filepath);
+            while (reader.Peek() != -1)
+            {
+                string[] lineParts = reader.ReadLine().Split(',');
+                if (lineParts.Length == 3)
+                {
+                    hostnames[lineParts[0]] = new Hostname() { Password = lineParts[2], Username = lineParts[1] };
+                }
+            }
+            reader.Close();
+        }
+
         static void Main(string[] args)
         {
             string[] commands = { "ip", "install", "add", "remove", "status", "update", "update-all", "list", "changepassword" };
-            if (args.Length < 2)
+            if (args.Length < 2 || commands.Contains(args[1]))
             {
                 Console.WriteLine("Please provide one of the following commands as the first argument: " + String.Join(',', commands));
                 Environment.Exit(-1);
             }
 
             DynaliClient client = new DynaliClient();
+            Dictionary<string, Hostname> hostnames = loadHostnames("dynali.csv");
+
 
 
             /*
